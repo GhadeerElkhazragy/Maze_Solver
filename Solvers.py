@@ -258,5 +258,3 @@ def solve_a(image):
 
 
 
-image = cv2.imread("maze1.jpg", cv2.IMREAD_GRAYSCALE)
-solve_a(image)
