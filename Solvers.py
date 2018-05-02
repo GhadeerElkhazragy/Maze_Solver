@@ -30,6 +30,48 @@ end = Point()
 # BFS neighbors
 dir4 = [Point(0, -1), Point(0, 1), Point(1, 0), Point(-1, 0)]
 
+# A Star algorithm
+
+
+def A_STAR(s, e, neighbors, distance, cost):
+    consta = 2000
+    g_score = {s: 0}
+    f_score = {s: g_score[s] + cost(s, e)}
+    openset = {s}
+    closedset = set()
+    parent = {s: None}
+    while openset:
+        current = min(openset, key=lambda x: f_score[x])
+        if current == e:
+
+            cons_path = reconstruct_path(parent, e)
+            for i in cons_path:
+                point = Point(i[0], i[1])
+                img[point.y][point.x] = [255, 255, 255]
+                img[point.y + 1][point.x + 1] = [255, 255, 255]
+                img[point.y + 2][point.x + 2] = [255, 255, 255]
+                # return reconstruct_path(parent, e)
+
+        openset.remove(current)
+        closedset.add(current)
+        for neighbor in neighbors(current):  # could've used dir4 and class Point but decided to try a different way
+            if neighbor in closedset:
+                continue
+            if neighbor not in openset:
+                openset.add(neighbor)
+                c_f = Point(neighbor[0],neighbor[1])
+                img[c_f.y][c_f.x] = list(reversed(
+                    [i * 255 for i in colorsys.hsv_to_rgb(g_score[current] /consta, 1, 1)])
+                )
+
+            tentative_g_score = g_score[current] + distance(current, neighbor)
+            if tentative_g_score >= g_score.get(neighbor, float('inf')):
+                continue
+            parent[neighbor] = current
+
+            g_score[neighbor] = tentative_g_score
+            f_score[neighbor] = tentative_g_score + cost(neighbor, e)
+
 
 # BFS algorithm
 def BFS(s, e):
@@ -111,6 +153,7 @@ def disp():
         cv2.waitKey(1)
 
 
+
 # Detecting maze walls bfs
 
 
@@ -119,6 +162,19 @@ def not_blocked(node):
             (img[node.y][node.x][0] != 0 or img[node.y][node.x][1] != 0 or img[node.y][node.x][2] != 0)):
         return True
 
+# Detecting maze walls A Star
+
+
+def not_blocked_a(p):
+    if (p[0] >= 0 and p[0] < w and p[1] >= 0 and p[1] < h and
+            (img[p[1]][p[0]][0] != 0 or img[p[1]][p[0]][1] != 0 or img[p[1]][p[0]][2] != 0)):
+        return True
+
+# def is_blocked(p):
+    #   x,y = p
+    #  pixel = img[x,y]
+    # if any(c < 120 for c in pixel):
+        #    return True
 
 # A Star neighbors
 
@@ -138,6 +194,15 @@ def squared_euclidean(p1, p2):
 def manhattan(p1, p2):
     return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
 
+
+def reconstruct_path(parent, current_node):
+
+    path = []
+    while current_node is not None:
+        consta = 1000
+        path.append(current_node)
+        current_node = parent[current_node]
+    return list(reversed(path))
 
 # Main
 def solve_bfs(image):
@@ -165,6 +230,33 @@ def solve_bfs(image):
 
     cv2.waitKey(0)
 
+def solve_a(image):
+    global img,h,w
+    img = image
+    # img = cv2.imread("maze1.jpg", cv2.IMREAD_GRAYSCALE)
+    _, img = cv2.threshold(img, 120, 255, cv2.THRESH_BINARY)
+    img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    h, w = img.shape[:2]
+
+    print("Select start and end points : ")
+
+    distance = manhattan
+    heuristic = manhattan
+
+    t = threading.Thread(target=disp, args=())
+    t.daemon = True
+    t.start()
+
+    while p < 2:
+        pass
+
+    # BFS(start, end)
+    A_STAR(s, e, von_neumann_neighbors, distance, heuristic)
+
+
+    cv2.waitKey(0)
 
 
 
+image = cv2.imread("maze1.jpg", cv2.IMREAD_GRAYSCALE)
+solve_a(image)
